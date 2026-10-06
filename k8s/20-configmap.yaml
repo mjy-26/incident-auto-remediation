@@ -1,0 +1,15 @@
+# ConfigMap: non-secret runtime settings (the safety switches).
+# Secrets (Slack URL / Jira token) go in a Secret instead — see 30-secret.example.yaml.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: remediator-config
+  namespace: remediation
+data:
+  # Start SAFE: dry-run on. Flip to "false" only when you trust it.
+  DRY_RUN: "true"
+  IN_CLUSTER: "true"
+  ALLOWED_NAMESPACES: "demo"
+  ALLOWED_ACTIONS: "restart_pod,scale_deployment"
+  MAX_ACTIONS_PER_MIN: "5"
+  JIRA_PROJECT_KEY: "OPS"

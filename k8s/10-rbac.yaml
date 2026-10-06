@@ -1,0 +1,47 @@
+# RBAC: least-privilege permissions for the remediator.
+#
+# The service itself runs in the `remediation` namespace, but it needs to ACT
+# on workloads in the application namespaces it's allowed to touch (here: demo).
+# We grant a namespaced Role (NOT cluster-wide) so the blast radius is bounded
+# by RBAC *in addition* to the app's own ALLOWED_NAMESPACES allowlist.
+#
+# Permissions granted (and nothing more):
+#   - pods:                 get, list, delete   (delete = "restart" a managed pod)
+#   - deployments/scale:    get, update         (scale out/in)
+#   - deployments:          get, list           (read current replica count)
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: remediator
+  namespace: remediation
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: remediator
+  namespace: demo
+rules:
+  - apiGroups: [""]
+    resources: ["pods"]
+    verbs: ["get", "list", "delete"]
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    verbs: ["get", "list"]
+  - apiGroups: ["apps"]
+    resources: ["deployments/scale"]
+    verbs: ["get", "update"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: remediator
+  namespace: demo
+subjects:
+  - kind: ServiceAccount
+    name: remediator
+    namespace: remediation
+roleRef:
+  kind: Role
+  name: remediator
+  apiGroup: rbac.authorization.k8s.io

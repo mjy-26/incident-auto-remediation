@@ -1,0 +1,24 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+
+# ---- Secrets / local config (NEVER commit real creds) ----
+.env
+*.local
+# Real K8s secret (only the *.example.yaml is tracked)
+k8s/30-secret.yaml
+
+# ---- Editor / OS ----
+.vscode/
+.idea/
+.DS_Store

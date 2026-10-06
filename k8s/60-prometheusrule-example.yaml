@@ -1,0 +1,49 @@
+# Example PrometheusRule showing how an alert declares its own remediation.
+#
+# KEY CONTRACT with the remediator:
+#   - annotations.action  -> which runbook action to run (must be on the app's
+#                            ALLOWED_ACTIONS allowlist): restart_pod | scale_deployment
+#   - labels.namespace    -> must be on ALLOWED_NAMESPACES (blast radius)
+#   - labels.pod          -> target pod for restart_pod
+#   - labels.deployment   -> target deployment for scale_deployment
+#   - labels.remediate    -> "true" so Alertmanager routes it to our receiver
+#
+# These are EXAMPLES — tune the expressions to your real metrics.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: remediation-examples
+  namespace: remediation
+  labels:
+    release: kube-prometheus-stack  # so the Prometheus operator picks it up
+spec:
+  groups:
+    - name: auto-remediation.rules
+      rules:
+        # Restart a pod that has been OOMKilled / is crash-looping.
+        - alert: PodCrashLooping
+          expr: |
+            max by (namespace, pod) (
+              rate(kube_pod_container_status_restarts_total{namespace="demo"}[5m])
+            ) > 0
+          for: 5m
+          labels:
+            severity: critical
+            remediate: "true"
+          annotations:
+            summary: "Pod {{ $labels.pod }} is crash-looping"
+            action: "restart_pod"
+
+        # Scale out a deployment when it's saturated (example: high CPU).
+        - alert: DeploymentSaturated
+          expr: |
+            avg by (namespace, deployment) (
+              rate(container_cpu_usage_seconds_total{namespace="demo"}[5m])
+            ) > 0.8
+          for: 10m
+          labels:
+            severity: warning
+            remediate: "true"
+          annotations:
+            summary: "Deployment {{ $labels.deployment }} is CPU-saturated"
+            action: "scale_deployment"

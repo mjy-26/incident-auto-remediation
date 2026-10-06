@@ -1,0 +1,27 @@
+# Alertmanager receiver that POSTs firing alerts to our webhook service.
+#
+# How to use:
+#   - If you run kube-prometheus-stack, put this under alertmanager.config
+#     (Helm values) or merge into your AlertmanagerConfig CRD.
+#   - The webhook URL is the in-cluster Service DNS name of the remediator.
+#
+# Note the `send_resolved: false` — our service ignores "resolved" alerts
+# anyway, so there's no point sending them.
+
+route:
+  receiver: "auto-remediation"
+  group_by: ["alertname", "namespace"]
+  group_wait: 10s
+  group_interval: 1m
+  repeat_interval: 1h
+  routes:
+    # Only route alerts that opt in via the `remediate: "true"` label.
+    - matchers:
+        - remediate = "true"
+      receiver: "auto-remediation"
+
+receivers:
+  - name: "auto-remediation"
+    webhook_configs:
+      - url: "http://remediator.remediation.svc.cluster.local/webhook"
+        send_resolved: false

@@ -1,0 +1,16 @@
+# Web framework for receiving Alertmanager webhooks
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+
+# Data validation / parsing of the Alertmanager JSON payload
+pydantic==2.9.2
+
+# Official Kubernetes client — used to restart pods / scale deployments
+kubernetes==31.0.0
+
+# Outbound HTTP (Slack webhook, Jira REST API)
+requests==2.32.3
+
+# ---- dev / test only ----
+pytest==8.3.3
+httpx==0.27.2            # FastAPI TestClient dependency

@@ -1,0 +1,21 @@
+{
+  "version": "4",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertname": "PodCrashLooping",
+        "severity": "critical",
+        "namespace": "demo",
+        "pod": "checkout-abc123",
+        "deployment": "checkout",
+        "remediate": "true"
+      },
+      "annotations": {
+        "summary": "Pod checkout-abc123 is crash-looping",
+        "action": "restart_pod"
+      }
+    }
+  ]
+}
