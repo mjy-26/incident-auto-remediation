@@ -1,5 +1,9 @@
 # Incident Auto-Remediation
 
+[![CI](https://github.com/mjy-26/incident-auto-remediation/actions/workflows/ci.yml/badge.svg)](https://github.com/mjy-26/incident-auto-remediation/actions/workflows/ci.yml)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)
+
 A small, **safety-first** service that receives Prometheus **Alertmanager**
 webhooks and runs allowlisted Kubernetes runbook actions (restart a pod, scale a
 deployment) — with dry-run, namespace blast-radius limits, and rate limiting
@@ -13,6 +17,47 @@ baked in. Optional Slack/Jira notifications.
 > provides the Prometheus/Grafana/Loki/Tempo stack with SLO burn-rate alerting
 > that *detects* incidents — point its Alertmanager at this service's `/webhook`
 > to close the loop and auto-remediate.
+
+## Proof it works
+
+**Automated:** every push runs lint + the full unit-test suite in GitHub Actions
+(the green **CI** badge above is live). Reproduce locally in ~30s:
+
+```bash
+make venv && make test
+# ....................                                     [100%]
+# 20 passed in 0.2s
+```
+
+**Interactive:** boot it (no cluster needed — `DRY_RUN` is on) and POST a real
+Alertmanager-shaped alert:
+
+```bash
+uvicorn src.app:app --port 8080 &
+curl -s localhost:8080/ | jq           # shows the live safety posture
+curl -s -X POST localhost:8080/webhook -H 'Content-Type: application/json' \
+     -d @hack/sample-alert.json | jq
+```
+
+```jsonc
+// response — note it decided the action but SAFELY stopped at the dry-run guard
+{
+  "received": 1,
+  "handled": [{
+    "alert": "PodCrashLooping",
+    "result": {
+      "action": "restart_pod",
+      "target": "demo",
+      "performed": false,
+      "detail": "DRY_RUN: would run 'restart_pod'"
+    }
+  }]
+}
+```
+
+Flip `DRY_RUN=false` against a real kind cluster (`make build load deploy`) and
+the same request restarts the pod for real — the safety checks (allowlist,
+namespace, rate limit) run identically either way.
 
 ## How it works
 
@@ -107,3 +152,7 @@ hack/       sample alert payload
 Dockerfile  non-root, minimal image
 Makefile    build / load / deploy / test helpers
 ```
+
+## License
+
+[MIT](LICENSE)
