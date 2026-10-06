@@ -8,6 +8,12 @@ baked in. Optional Slack/Jira notifications.
 > **Cost: $0.** Everything runs locally (kind + Colima). No registry, no cloud,
 > no managed services. Slack/Jira are optional and OFF by default.
 
+> **Companion project:** This is the *act* half of a detect→act SRE loop. Its
+> sibling, [k8s-observability-platform](https://github.com/mjy-26/k8s-observability-platform),
+> provides the Prometheus/Grafana/Loki/Tempo stack with SLO burn-rate alerting
+> that *detects* incidents — point its Alertmanager at this service's `/webhook`
+> to close the loop and auto-remediate.
+
 ## How it works
 
 ```
